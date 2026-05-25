@@ -1,18 +1,8 @@
 import React, { useEffect, useState } from 'react';
-
-import {
-  View,
-  Text,
-  StyleSheet,
-  Image,
-  ScrollView,
-  TouchableOpacity,
-  ActivityIndicator,
-} from 'react-native';
-
+import {View, Text, StyleSheet, Image, ScrollView, TouchableOpacity, ActivityIndicator, } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
-
 import axios from 'axios';
+import { favoritos } from '../data/favoritos';
 
 export default function DetalheScreen({ route, navigation }) {
 
@@ -63,6 +53,24 @@ export default function DetalheScreen({ route, navigation }) {
     pais.languages
       ? Object.values(pais.languages)[0]
       : 'N/A';
+
+function adicionarFavorito() {
+
+  const existe = favoritos.find(
+    (item) => item.cca2 === pais.cca2
+  );
+
+  if (existe) {
+    alert('Esse país já está nos favoritos');
+    return;
+  }
+
+  favoritos.push(pais);
+
+  alert('País adicionado aos favoritos!');
+}
+
+
 
   return (
 
@@ -175,7 +183,10 @@ export default function DetalheScreen({ route, navigation }) {
 
         </View>
 
-        <TouchableOpacity style={styles.favoriteButton}>
+        <TouchableOpacity
+  style={styles.favoriteButton}
+  onPress={adicionarFavorito}
+>
           <Ionicons
             name="heart"
             size={20}

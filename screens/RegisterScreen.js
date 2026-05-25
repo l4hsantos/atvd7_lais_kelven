@@ -1,12 +1,13 @@
 import React, { useState } from 'react';
-import {View, Text, TextInput, TouchableOpacity, StyleSheet, Alert,} from 'react-native';
+import {View, Text, TextInput, TouchableOpacity, StyleSheet, Alert, } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
-import { createUserWithEmailAndPassword } from 'firebase/auth';
+import { createUserWithEmailAndPassword, updateProfile, } from 'firebase/auth';
 import { auth } from '../firebase/firebaseConfig';
 
-export default function RegisterScreen({ navigation }) {
+export default function RegisterScreen({ navigation,}) {
 
-  const [mostrarSenha, setMostrarSenha] = useState(false);
+  const [mostrarSenha, setMostrarSenha] =
+    useState(false);
 
   const [mostrarConfirmar, setMostrarConfirmar] =
     useState(false);
@@ -17,29 +18,27 @@ export default function RegisterScreen({ navigation }) {
 
   const [senha, setSenha] = useState('');
 
-  const [confirmarSenha, setConfirmarSenha] =
-    useState('');
+  const [confirmarSenha, setConfirmarSenha] = useState('');
 
   async function cadastrar() {
 
-    if (
-      !nome ||
-      !email ||
-      !senha ||
-      !confirmarSenha
-    ) {
+    if ( !nome || !email || !senha || !confirmarSenha ) {
+
       Alert.alert(
         'Erro',
         'Preencha todos os campos'
       );
+
       return;
     }
 
     if (senha !== confirmarSenha) {
+
       Alert.alert(
         'Erro',
         'As senhas não coincidem'
       );
+
       return;
     }
 
@@ -54,12 +53,14 @@ export default function RegisterScreen({ navigation }) {
 
       const user = userCredential.user;
 
-    Alert.alert(
-  'Sucesso',
-  'Conta criada com sucesso!'
-);
+      await updateProfile(user, { displayName: nome });
 
-navigation.navigate('Login');
+      Alert.alert(
+        'Sucesso',
+        'Conta criada com sucesso!'
+      );
+
+      navigation.navigate('Login');
 
     } catch (error) {
 
@@ -71,28 +72,32 @@ navigation.navigate('Login');
   }
 
   return (
+
     <View style={styles.container}>
 
       <TouchableOpacity
         style={styles.backButton}
         onPress={() => navigation.goBack()}
       >
+
         <Ionicons
           name="arrow-back"
           size={26}
           color="#000"
         />
+
       </TouchableOpacity>
 
       <Text style={styles.title}>
-        Criar Conta
+        CRIAR CONTA
       </Text>
 
       <Text style={styles.subtitle}>
-        Preencha os dados para se cadastrar
+        PREENCHA OS CAMPOS PARA SE CADASTRAR
       </Text>
 
       <View style={styles.inputContainer}>
+
         <Ionicons
           name="person-outline"
           size={20}
@@ -100,14 +105,16 @@ navigation.navigate('Login');
         />
 
         <TextInput
-          placeholder="Nome completo"
+          placeholder="NOME COMPLETO"
           style={styles.input}
           value={nome}
           onChangeText={setNome}
         />
+
       </View>
 
       <View style={styles.inputContainer}>
+
         <Ionicons
           name="mail-outline"
           size={20}
@@ -115,15 +122,17 @@ navigation.navigate('Login');
         />
 
         <TextInput
-          placeholder="E-mail"
+          placeholder="E-MAIL"
           style={styles.input}
           value={email}
           onChangeText={setEmail}
           keyboardType="email-address"
         />
+
       </View>
 
       <View style={styles.inputContainer}>
+
         <Ionicons
           name="lock-closed-outline"
           size={20}
@@ -131,7 +140,7 @@ navigation.navigate('Login');
         />
 
         <TextInput
-          placeholder="Senha"
+          placeholder="SENHA"
           secureTextEntry={!mostrarSenha}
           style={styles.input}
           value={senha}
@@ -139,23 +148,21 @@ navigation.navigate('Login');
         />
 
         <TouchableOpacity
-          onPress={() =>
-            setMostrarSenha(!mostrarSenha)
-          }
+          onPress={() => setMostrarSenha(!mostrarSenha) }
         >
+
           <Ionicons
-            name={
-              mostrarSenha
-                ? 'eye-outline'
-                : 'eye-off-outline'
-            }
+            name={ mostrarSenha  ? 'eye-outline' : 'eye-off-outline' }
             size={20}
             color="#777"
           />
+
         </TouchableOpacity>
+
       </View>
 
       <View style={styles.inputContainer}>
+
         <Ionicons
           name="lock-closed-outline"
           size={20}
@@ -163,7 +170,7 @@ navigation.navigate('Login');
         />
 
         <TextInput
-          placeholder="Confirmar senha"
+          placeholder="CONFIRMAR SENHA"
           secureTextEntry={!mostrarConfirmar}
           style={styles.input}
           value={confirmarSenha}
@@ -177,6 +184,7 @@ navigation.navigate('Login');
             )
           }
         >
+
           <Ionicons
             name={
               mostrarConfirmar
@@ -186,22 +194,26 @@ navigation.navigate('Login');
             size={20}
             color="#777"
           />
+
         </TouchableOpacity>
+
       </View>
 
       <TouchableOpacity
         style={styles.button}
         onPress={cadastrar}
       >
+
         <Text style={styles.buttonText}>
-          Cadastrar
+          CADASTRAR
         </Text>
+
       </TouchableOpacity>
 
       <View style={styles.footer}>
 
         <Text style={styles.footerText}>
-          Já tem conta?
+          JÁ TEM  UMA CONTA?
         </Text>
 
         <TouchableOpacity
@@ -209,9 +221,11 @@ navigation.navigate('Login');
             navigation.navigate('Login')
           }
         >
+
           <Text style={styles.link}>
-            {' '}Faça login
+            {' '}FAÇA LOGIN
           </Text>
+
         </TouchableOpacity>
 
       </View>

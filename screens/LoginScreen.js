@@ -11,39 +11,34 @@ export default function LoginScreen({ navigation }) {
   const [email, setEmail] = useState('');
   const [senha, setSenha] = useState('');
 
-  async function login() {
+async function login() {
 
-    if (!email || !senha) {
-      Alert.alert('Erro', 'Preencha todos os campos');
-      return;
-    }
-
-    try {
-
-      const userCredential =
-        await signInWithEmailAndPassword(
-          auth,
-          email,
-          senha
-        );
-
-      const user = userCredential.user;
-
-      Alert.alert(
-        'Sucesso',
-        'Login realizado com sucesso!'
-      );
-
-      console.log(user);
-
-    } catch (error) {
-
-      Alert.alert(
-        'Erro no login',
-        error.message
-      );
-    }
+  if (!email || !senha) {
+    Alert.alert('Erro', 'Preencha todos os campos');
+    return;
   }
+
+  try {
+
+    const userCredential =
+      await signInWithEmailAndPassword(
+        auth,
+        email,
+        senha
+      );
+
+    const user = userCredential.user;
+
+      navigation.navigate('Home');
+
+  } catch (error) {
+
+    Alert.alert(
+      'Erro no login',
+      error.message
+    );
+  }
+}
 
   async function esquecerSenha() {
 
