@@ -1,7 +1,7 @@
 import React, { useEffect, useState } from 'react';
 import { View, Text, StyleSheet, TouchableOpacity, Image, Alert, TextInput, ScrollView, } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
-import { getAuth, signOut, updateProfile } from 'firebase/auth';
+import { getAuth, signOut, updateProfile, updatePassword, } from 'firebase/auth';
 import * as ImagePicker from 'expo-image-picker';
 import { favoritos } from '../data/favoritos';
 
@@ -12,18 +12,20 @@ export default function PerfilScreen({ navigation }) {
   const user = auth.currentUser;
 
   const [nome, setNome] = useState('');
+
   const [editando, setEditando] = useState(false);
 
-const [foto, setFoto] = useState(
-  user?.photoURL || null
-);
+  const [novaSenha, setNovaSenha] = useState('');
+
+  const [mostrarSenha, setMostrarSenha] = useState(false);
+
+  const [editandoSenha, setEditandoSenha] = useState(false);
+
+  const [foto, setFoto] = useState(user?.photoURL || null);
 
   useEffect(() => {
 
-    if (user?.displayName) {
-      setNome(user.displayName);
-    }
-
+    if (user?.displayName) { setNome(user.displayName); }
   }, []);
 
   async function sair() {
@@ -67,6 +69,54 @@ const [foto, setFoto] = useState(
     }
   }
 
+  async function alterarSenha() {
+
+    try {
+
+      if (!novaSenha) {
+
+        Alert.alert(
+          'Erro',
+          'Digite uma nova senha'
+        );
+
+        return;
+      }
+
+      const auth = getAuth();
+
+      const user = auth.currentUser;
+
+      if (!user) {
+        throw new Error(
+          'Usuário não autenticado'
+        );
+      }
+
+      await updatePassword(
+        user,
+        novaSenha
+      );
+
+      Alert.alert(
+        'Sucesso',
+        'Senha alterada com sucesso!'
+      );
+
+      setNovaSenha('');
+      setEditandoSenha(false);
+
+    } catch (error) {
+
+      console.log(error);
+
+      Alert.alert(
+        'Erro',
+        error.message
+      );
+    }
+  }
+
   async function escolherImagem() {
 
     const permissao =
@@ -82,18 +132,12 @@ const [foto, setFoto] = useState(
       return;
     }
 
-    const resultado =
-      await ImagePicker.launchImageLibraryAsync({
-        mediaTypes:
-          ImagePicker.MediaTypeOptions.Images,
-        allowsEditing: true,
-        aspect: [1, 1],
-        quality: 1,
-      });
+    const resultado = await ImagePicker.launchImageLibraryAsync({ mediaTypes: ImagePicker.MediaTypeOptions.Images, allowsEditing: true, aspect: [1, 1], quality: 1, });
 
     if (!resultado.canceled) {
 
-      const imagem = resultado.assets[0].uri;
+      const imagem =
+        resultado.assets[0].uri;
 
       setFoto(imagem);
 
@@ -141,27 +185,31 @@ const [foto, setFoto] = useState(
         <View style={styles.profileCard}>
 
           {
-  foto ? (
+            foto ? (
 
-    <Image
-      source={{ uri: foto }}
-      style={styles.avatar}
-    />
+              <Image
+                source={{ uri: foto }}
+                style={styles.avatar}
+              />
 
-  ) : (
+            ) : (
 
-    <View style={styles.avatarPlaceholder}>
+              <View
+                style={
+                  styles.avatarPlaceholder
+                }
+              >
 
-      <Ionicons
-        name="person"
-        size={60}
-        color="#FFF"
-      />
+                <Ionicons
+                  name="person"
+                  size={60}
+                  color="#FFF"
+                />
 
-    </View>
+              </View>
 
-  )
-}
+            )
+          }
 
           <TouchableOpacity
             style={styles.cameraButton}
@@ -200,15 +248,21 @@ const [foto, setFoto] = useState(
             {user?.email}
           </Text>
 
-          <View style={styles.statsContainer}>
+          <View
+            style={styles.statsContainer}
+          >
 
             <View style={styles.statBox}>
 
-              <Text style={styles.statNumber}>
+              <Text
+                style={styles.statNumber}
+              >
                 {favoritos.length}
               </Text>
 
-              <Text style={styles.statLabel}>
+              <Text
+                style={styles.statLabel}
+              >
                 Favoritos
               </Text>
 
@@ -216,11 +270,15 @@ const [foto, setFoto] = useState(
 
             <View style={styles.statBox}>
 
-              <Text style={styles.statNumber}>
+              <Text
+                style={styles.statNumber}
+              >
                 {favoritos.length}
               </Text>
 
-              <Text style={styles.statLabel}>
+              <Text
+                style={styles.statLabel}
+              >
                 Países vistos
               </Text>
 
@@ -243,7 +301,9 @@ const [foto, setFoto] = useState(
                   color="#555"
                 />
 
-                <Text style={styles.optionText}>
+                <Text
+                  style={styles.optionText}
+                >
                   Salvar Nome
                 </Text>
 
@@ -264,7 +324,9 @@ const [foto, setFoto] = useState(
                   color="#555"
                 />
 
-                <Text style={styles.optionText}>
+                <Text
+                  style={styles.optionText}
+                >
                   Editar Perfil
                 </Text>
 
@@ -290,6 +352,103 @@ const [foto, setFoto] = useState(
 
           </TouchableOpacity>
 
+          {
+
+            editandoSenha ? (
+
+              <>
+
+                <View
+                  style={styles.inputContainer}
+                >
+
+                  <Ionicons
+                    name="lock-closed-outline"
+                    size={20}
+                    color="#777"
+                  />
+
+                  <TextInput
+                    placeholder="Nova senha"
+                    secureTextEntry={
+                      !mostrarSenha
+                    }
+                    style={styles.inputSenha}
+                    value={novaSenha}
+                    onChangeText={
+                      setNovaSenha
+                    }
+                  />
+
+                  <TouchableOpacity
+                    onPress={() =>
+                      setMostrarSenha(
+                        !mostrarSenha
+                      )
+                    }
+                  >
+
+                    <Ionicons
+                      name={
+                        mostrarSenha
+                          ? 'eye-outline'
+                          : 'eye-off-outline'
+                      }
+                      size={20}
+                      color="#777"
+                    />
+
+                  </TouchableOpacity>
+
+                </View>
+
+                <TouchableOpacity
+                  style={styles.option}
+                  onPress={alterarSenha}
+                >
+
+                  <Ionicons
+                    name="checkmark-circle-outline"
+                    size={20}
+                    color="#555"
+                  />
+
+                  <Text
+                    style={styles.optionText}
+                  >
+                    Salvar Nova Senha
+                  </Text>
+
+                </TouchableOpacity>
+
+              </>
+
+            ) : (
+
+              <TouchableOpacity
+                style={styles.option}
+                onPress={() =>
+                  setEditandoSenha(true)
+                }
+              >
+
+                <Ionicons
+                  name="lock-closed-outline"
+                  size={20}
+                  color="#555"
+                />
+
+                <Text
+                  style={styles.optionText}
+                >
+                  Alterar Senha
+                </Text>
+
+              </TouchableOpacity>
+
+            )
+          }
+
           <TouchableOpacity
             style={styles.logout}
             onPress={sair}
@@ -301,7 +460,9 @@ const [foto, setFoto] = useState(
               color="#FF3B30"
             />
 
-            <Text style={styles.logoutText}>
+            <Text
+              style={styles.logoutText}
+            >
               Sair
             </Text>
 
@@ -310,7 +471,6 @@ const [foto, setFoto] = useState(
         </View>
 
       </ScrollView>
-
 
       <View style={styles.bottomTab}>
 
@@ -336,7 +496,9 @@ const [foto, setFoto] = useState(
         <TouchableOpacity
           style={styles.tabItem}
           onPress={() =>
-            navigation.navigate('Favoritos')
+            navigation.navigate(
+              'Favoritos'
+            )
           }
         >
 
@@ -393,14 +555,14 @@ const styles = StyleSheet.create({
     borderBottomRightRadius: 25,
   },
 
-   avatarPlaceholder: {
-  width: 110,
-  height: 110,
-  borderRadius: 55,
-  backgroundColor: '#0057FF',
-  justifyContent: 'center',
-  alignItems: 'center',
-},
+  avatarPlaceholder: {
+    width: 110,
+    height: 110,
+    borderRadius: 55,
+    backgroundColor: '#0057FF',
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
 
   headerTitle: {
     color: '#FFF',
@@ -452,6 +614,23 @@ const styles = StyleSheet.create({
     padding: 14,
     marginTop: 20,
     fontSize: 16,
+  },
+
+  inputContainer: {
+    width: '100%',
+    backgroundColor: '#F5F7FF',
+    flexDirection: 'row',
+    alignItems: 'center',
+    borderRadius: 14,
+    paddingHorizontal: 15,
+    marginBottom: 15,
+    height: 55,
+  },
+
+  inputSenha: {
+    flex: 1,
+    marginLeft: 10,
+    fontSize: 15,
   },
 
   statsContainer: {

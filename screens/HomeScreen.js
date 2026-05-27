@@ -1,6 +1,7 @@
 import React, { useEffect, useState } from 'react';
-import { View, Text, StyleSheet, TextInput, FlatList, TouchableOpacity, Image, ActivityIndicator, } from 'react-native';
+import {View,Text,StyleSheet,TextInput,TouchableOpacity,Image, ActivityIndicator,ScrollView,} from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
+
 export default function HomeScreen({ navigation }) {
 
   const [paises, setPaises] = useState([]);
@@ -46,53 +47,6 @@ export default function HomeScreen({ navigation }) {
       .toLowerCase()
       .includes(pesquisa.toLowerCase())
   );
-
-  function renderItem({ item }) {
-
-    return (
-
-      <TouchableOpacity
-        style={styles.card}
-        activeOpacity={0.8}
-        onPress={() =>
-          navigation.navigate('Detalhe', {
-            codigo: item.cca2,
-          })
-        }
-      >
-
-        <View style={styles.cardLeft}>
-
-          <Image
-            source={{
-              uri: `https://flagsapi.com/${item.cca2}/flat/64.png`,
-            }}
-            style={styles.flag}
-          />
-
-          <View>
-
-            <Text style={styles.countryName}>
-              {item.name.common}
-            </Text>
-
-            <Text style={styles.capital}>
-              Capital: {item.capital?.[0] || 'N/A'}
-            </Text>
-
-          </View>
-
-        </View>
-
-        <Ionicons
-          name="chevron-forward"
-          size={20}
-          color="#999"
-        />
-
-      </TouchableOpacity>
-    );
-  }
 
   if (loading) {
 
@@ -148,18 +102,61 @@ export default function HomeScreen({ navigation }) {
 
       </View>
 
-      <FlatList
-        data={paisesFiltrados}
-        keyExtractor={(item) => item.cca2}
-        renderItem={renderItem}
+      <ScrollView
+        style={styles.scroll}
         showsVerticalScrollIndicator={false}
-        style={{ flex: 1 }}
-        contentContainerStyle={{
-          paddingHorizontal: 15,
-          paddingTop: 15,
-          paddingBottom: 140,
-        }}
-      />
+        contentContainerStyle={styles.scrollContent}
+      >
+
+        {
+          paisesFiltrados.map((item) => (
+
+            <TouchableOpacity
+              key={item.cca2}
+              style={styles.card}
+              activeOpacity={0.8}
+              onPress={() =>
+                navigation.navigate('Detalhe', {
+                  codigo: item.cca2,
+                })
+              }
+            >
+
+              <View style={styles.cardLeft}>
+
+                <Image
+                  source={{
+                    uri: `https://flagsapi.com/${item.cca2}/flat/64.png`,
+                  }}
+                  style={styles.flag}
+                />
+
+                <View>
+
+                  <Text style={styles.countryName}>
+                    {item.name.common}
+                  </Text>
+
+                  <Text style={styles.capital}>
+                    Capital: {item.capital?.[0] || 'N/A'}
+                  </Text>
+
+                </View>
+
+              </View>
+
+              <Ionicons
+                name="chevron-forward"
+                size={20}
+                color="#999"
+              />
+
+            </TouchableOpacity>
+
+          ))
+        }
+
+      </ScrollView>
 
       <View style={styles.bottomTab}>
 
@@ -184,10 +181,9 @@ export default function HomeScreen({ navigation }) {
         <TouchableOpacity
           style={styles.tabItem}
           activeOpacity={0.7}
-          onPress={() => {
-            console.log('Abrindo Favoritos');
-            navigation.navigate('Favoritos');
-          }}
+          onPress={() =>
+            navigation.navigate('Favoritos')
+          }
         >
 
           <Ionicons
@@ -205,10 +201,9 @@ export default function HomeScreen({ navigation }) {
         <TouchableOpacity
           style={styles.tabItem}
           activeOpacity={0.7}
-          onPress={() => {
-            console.log('Abrindo Perfil');
-            navigation.navigate('Perfil');
-          }}
+          onPress={() =>
+            navigation.navigate('Perfil')
+          }
         >
 
           <Ionicons
@@ -234,6 +229,7 @@ const styles = StyleSheet.create({
   container: {
     flex: 1,
     backgroundColor: '#F4F7FF',
+    paddingBottom: 90,
   },
 
   loadingContainer: {
@@ -276,6 +272,16 @@ const styles = StyleSheet.create({
   searchInput: {
     flex: 1,
     marginLeft: 10,
+  },
+
+  scroll: {
+    flex: 1,
+  },
+
+  scrollContent: {
+    paddingHorizontal: 15,
+    paddingTop: 15,
+    paddingBottom: 30,
   },
 
   card: {

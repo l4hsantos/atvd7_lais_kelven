@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
 import { View, Text, TextInput, TouchableOpacity, StyleSheet, Image, Alert, } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
-import { signInWithEmailAndPassword, sendPasswordResetEmail } from 'firebase/auth';
+import { signInWithEmailAndPassword } from 'firebase/auth';
 import { auth } from '../firebase/firebaseConfig';
 
 export default function LoginScreen({ navigation }) {
@@ -11,70 +11,42 @@ export default function LoginScreen({ navigation }) {
   const [email, setEmail] = useState('');
   const [senha, setSenha] = useState('');
 
-async function login() {
+  async function login() {
 
-  if (!email || !senha) {
-    Alert.alert('Erro', 'Preencha todos os campos');
-    return;
-  }
-
-  try {
-
-    const userCredential =
-      await signInWithEmailAndPassword(
-        auth,
-        email,
-        senha
-      );
-
-    const user = userCredential.user;
-
-      navigation.navigate('Home');
-
-  } catch (error) {
-
-    Alert.alert(
-      'Erro no login',
-      error.message
-    );
-  }
-}
-
-  async function esquecerSenha() {
-
-    if (!email) {
-      Alert.alert(
-        'Atenção',
-        'Digite seu e-mail para recuperar a senha'
-      );
+    if (!email || !senha) {
+      Alert.alert('Erro', 'Preencha todos os campos');
       return;
     }
 
     try {
 
-      await sendPasswordResetEmail(auth, email);
+      const userCredential =
+        await signInWithEmailAndPassword(
+          auth,
+          email,
+          senha
+        );
 
-      Alert.alert(
-        'Sucesso',
-        'Enviamos um link de recuperação para seu e-mail'
-      );
+      const user = userCredential.user;
+
+      navigation.navigate('Home');
 
     } catch (error) {
 
       Alert.alert(
-        'Erro',
+        'Erro no login',
         error.message
       );
     }
   }
 
+
+
   return (
     <View style={styles.container}>
 
       <Image
-        source={{
-          uri: 'https://cdn-icons-png.flaticon.com/512/201/201623.png',
-        }}
+        source={require('../assets/avião.png')}
         style={styles.image}
       />
 
@@ -133,15 +105,6 @@ async function login() {
           />
         </TouchableOpacity>
       </View>
-
-      <TouchableOpacity
-        style={styles.forgotPassword}
-        onPress={esquecerSenha}
-      >
-        <Text style={styles.forgotPasswordText}>
-          Esqueceu a senha?
-        </Text>
-      </TouchableOpacity>
 
       <TouchableOpacity
         style={styles.button}
@@ -218,17 +181,6 @@ const styles = StyleSheet.create({
     flex: 1,
     marginLeft: 10,
     fontSize: 15,
-  },
-
-  forgotPassword: {
-    width: '100%',
-    alignItems: 'flex-end',
-    marginBottom: 15,
-  },
-
-  forgotPasswordText: {
-    color: '#0057FF',
-    fontWeight: '600',
   },
 
   button: {
