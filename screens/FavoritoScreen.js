@@ -1,17 +1,57 @@
 import React, { useState, useEffect } from 'react';
-import {View, Text, StyleSheet, TouchableOpacity, Image, FlatList, } from 'react-native';
+import {View,Text,StyleSheet,TouchableOpacity,Image,FlatList,ActivityIndicator,} from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
-import { favoritos } from '../data/favoritos';
+import {collection,getDocs,} from 'firebase/firestore';
+import {auth,db,} from '../firebase/firebaseConfig';
 
 export default function FavoritoScreen({ navigation }) {
 
   const [lista, setLista] = useState([]);
+  const [loading, setLoading] = useState(true);
 
   useEffect(() => {
 
-    setLista([...favoritos]);
+    buscarFavoritos();
 
   }, []);
+
+  async function buscarFavoritos() {
+
+    try {
+
+      const user = auth.currentUser;
+
+      if (!user) return;
+
+      const querySnapshot = await getDocs(
+        collection(
+          db,
+          'usuarios',
+          user.uid,
+          'favoritos'
+        )
+      );
+
+      const favoritos = [];
+
+      querySnapshot.forEach((doc) => {
+
+        favoritos.push(doc.data());
+
+      });
+
+      setLista(favoritos);
+
+    } catch (error) {
+
+      console.log(error);
+
+    } finally {
+
+      setLoading(false);
+
+    }
+  }
 
   function renderItem({ item }) {
 
@@ -28,7 +68,7 @@ export default function FavoritoScreen({ navigation }) {
 
         <Image
           source={{
-            uri: item.flags?.png,
+            uri: item.bandeira,
           }}
           style={styles.image}
         />
@@ -36,11 +76,11 @@ export default function FavoritoScreen({ navigation }) {
         <View style={{ flex: 1 }}>
 
           <Text style={styles.country}>
-            {item.name.common}
+            {item.nome}
           </Text>
 
           <Text style={styles.capital}>
-            Capital: {item.capital?.[0]}
+            Capital: {item.capital}
           </Text>
 
         </View>
@@ -52,6 +92,21 @@ export default function FavoritoScreen({ navigation }) {
         />
 
       </TouchableOpacity>
+    );
+  }
+
+  if (loading) {
+
+    return (
+
+      <View style={styles.loadingContainer}>
+
+        <ActivityIndicator
+          size="large"
+          color="#0057FF"
+        />
+
+      </View>
     );
   }
 
@@ -171,6 +226,12 @@ const styles = StyleSheet.create({
   container: {
     flex: 1,
     backgroundColor: '#F4F7FF',
+  },
+
+  loadingContainer: {
+    flex: 1,
+    justifyContent: 'center',
+    alignItems: 'center',
   },
 
   header: {

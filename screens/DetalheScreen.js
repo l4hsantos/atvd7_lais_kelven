@@ -2,7 +2,8 @@ import React, { useEffect, useState } from 'react';
 import {View, Text, StyleSheet, Image, ScrollView, TouchableOpacity, ActivityIndicator, } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import axios from 'axios';
-import { favoritos } from '../data/favoritos';
+import { doc, setDoc, } from 'firebase/firestore';
+import { auth, db} from '../firebase/firebaseConfig';
 
 export default function DetalheScreen({ route, navigation }) {
 
@@ -54,20 +55,43 @@ export default function DetalheScreen({ route, navigation }) {
       ? Object.values(pais.languages)[0]
       : 'N/A';
 
-function adicionarFavorito() {
+async function adicionarFavorito() {
 
-  const existe = favoritos.find(
-    (item) => item.cca2 === pais.cca2
-  );
+  try {
 
-  if (existe) {
-    alert('Esse país já está nos favoritos');
-    return;
+    const user = auth.currentUser;
+
+    if (!user) {
+
+      alert('Você precisa estar logado');
+      return;
+    }
+
+    await setDoc(
+      doc(
+        db,
+        'usuarios',
+        user.uid,
+        'favoritos',
+        pais.cca2
+      ),
+      {
+        cca2: pais.cca2,
+        nome: pais.name.common,
+        capital: pais.capital?.[0] || 'N/A',
+        bandeira: pais.flags?.png,
+        continente: pais.region,
+      }
+    );
+
+    alert('País adicionado aos favoritos!');
+
+  } catch (error) {
+
+    console.log(error);
+
+    alert('Erro ao salvar favorito');
   }
-
-  favoritos.push(pais);
-
-  alert('País adicionado aos favoritos!');
 }
 
 

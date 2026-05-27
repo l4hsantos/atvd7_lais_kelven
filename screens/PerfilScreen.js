@@ -3,533 +3,224 @@ import { View, Text, StyleSheet, TouchableOpacity, Image, Alert, TextInput, Scro
 import { Ionicons } from '@expo/vector-icons';
 import { getAuth, signOut, updateProfile, updatePassword, } from 'firebase/auth';
 import * as ImagePicker from 'expo-image-picker';
-import { favoritos } from '../data/favoritos';
+import { collection, getDocs } from 'firebase/firestore';
+import { db } from '../firebase/firebaseConfig';
 
 export default function PerfilScreen({ navigation }) {
 
   const auth = getAuth();
-
   const user = auth.currentUser;
 
   const [nome, setNome] = useState('');
-
   const [editando, setEditando] = useState(false);
-
   const [novaSenha, setNovaSenha] = useState('');
-
   const [mostrarSenha, setMostrarSenha] = useState(false);
-
   const [editandoSenha, setEditandoSenha] = useState(false);
-
   const [foto, setFoto] = useState(user?.photoURL || null);
+  const [totalFavoritos, setTotalFavoritos] = useState(0);
 
   useEffect(() => {
-
     if (user?.displayName) { setNome(user.displayName); }
+    carregarFavoritos();
   }, []);
 
-  async function sair() {
 
+  async function carregarFavoritos() {
     try {
-
-      await signOut(auth);
-
-      navigation.replace('Login');
-
-    } catch (error) {
-
-      Alert.alert(
-        'Erro',
-        'Não foi possível sair da conta.'
+      const user = auth.currentUser;
+      if (!user) return;
+      const querySnapshot = await getDocs(
+        collection(db, 'usuarios', user.uid, 'favoritos')
       );
+      setTotalFavoritos(querySnapshot.size);
+    } catch (error) {
+      console.log(error);
+      setTotalFavoritos(0);
+    }
+  }
+
+  async function sair() {
+    try {
+      await signOut(auth);
+      navigation.replace('Login');
+    } catch (error) {
+      Alert.alert('Erro', 'Não foi possível sair da conta.');
     }
   }
 
   async function salvarNome() {
-
     try {
-
-      await updateProfile(user, {
-        displayName: nome,
-      });
-
-      Alert.alert(
-        'Sucesso',
-        'Perfil atualizado!'
-      );
-
+      await updateProfile(user, { displayName: nome });
+      Alert.alert('Sucesso', 'Perfil atualizado!');
       setEditando(false);
-
     } catch (error) {
-
-      Alert.alert(
-        'Erro',
-        'Não foi possível atualizar.'
-      );
+      Alert.alert('Erro', 'Não foi possível atualizar.');
     }
   }
 
   async function alterarSenha() {
-
     try {
-
       if (!novaSenha) {
-
-        Alert.alert(
-          'Erro',
-          'Digite uma nova senha'
-        );
-
+        Alert.alert('Erro', 'Digite uma nova senha');
         return;
       }
-
       const auth = getAuth();
-
       const user = auth.currentUser;
-
-      if (!user) {
-        throw new Error(
-          'Usuário não autenticado'
-        );
-      }
-
-      await updatePassword(
-        user,
-        novaSenha
-      );
-
-      Alert.alert(
-        'Sucesso',
-        'Senha alterada com sucesso!'
-      );
-
+      if (!user) throw new Error('Usuário não autenticado');
+      await updatePassword(user, novaSenha);
+      Alert.alert('Sucesso', 'Senha alterada com sucesso!');
       setNovaSenha('');
       setEditandoSenha(false);
-
     } catch (error) {
-
       console.log(error);
-
-      Alert.alert(
-        'Erro',
-        error.message
-      );
+      Alert.alert('Erro', error.message);
     }
   }
 
   async function escolherImagem() {
-
-    const permissao =
-      await ImagePicker.requestMediaLibraryPermissionsAsync();
-
+    const permissao = await ImagePicker.requestMediaLibraryPermissionsAsync();
     if (!permissao.granted) {
-
-      Alert.alert(
-        'Permissão necessária',
-        'Permita acesso à galeria.'
-      );
-
+      Alert.alert('Permissão necessária', 'Permita acesso à galeria.');
       return;
     }
-
-    const resultado = await ImagePicker.launchImageLibraryAsync({ mediaTypes: ImagePicker.MediaTypeOptions.Images, allowsEditing: true, aspect: [1, 1], quality: 1, });
-
+    const resultado = await ImagePicker.launchImageLibraryAsync({
+      mediaTypes: ImagePicker.MediaTypeOptions.Images,
+      allowsEditing: true,
+      aspect: [1, 1],
+      quality: 1,
+    });
     if (!resultado.canceled) {
-
-      const imagem =
-        resultado.assets[0].uri;
-
+      const imagem = resultado.assets[0].uri;
       setFoto(imagem);
-
       try {
-
-        await updateProfile(user, {
-          photoURL: imagem,
-        });
-
+        await updateProfile(user, { photoURL: imagem });
       } catch (error) {
-
         console.log(error);
       }
     }
   }
 
   return (
-
-    <View style={styles.container}>
+    <View style={styles.wrapper}>
 
       <View style={styles.header}>
-
-        <Ionicons
-          name="menu"
-          size={24}
-          color="#FFF"
-        />
-
-        <Text style={styles.headerTitle}>
-          Meu Perfil
-        </Text>
-
-        <Ionicons
-          name="person-circle-outline"
-          size={24}
-          color="#FFF"
-        />
-
+        <Ionicons name="menu" size={24} color="#FFF" />
+        <Text style={styles.headerTitle}>Meu Perfil</Text>
+        <Ionicons name="person-circle-outline" size={24} color="#FFF" />
       </View>
 
       <ScrollView
+        style={{ flex: 1 }}
         showsVerticalScrollIndicator={false}
+        contentContainerStyle={{ paddingBottom: 20 }}
       >
-
         <View style={styles.profileCard}>
 
-          {
-            foto ? (
+          {foto ? (
+            <Image source={{ uri: foto }} style={styles.avatar} />
+          ) : (
+            <View style={styles.avatarPlaceholder}>
+              <Ionicons name="person" size={60} color="#FFF" />
+            </View>
+          )}
 
-              <Image
-                source={{ uri: foto }}
-                style={styles.avatar}
-              />
-
-            ) : (
-
-              <View
-                style={
-                  styles.avatarPlaceholder
-                }
-              >
-
-                <Ionicons
-                  name="person"
-                  size={60}
-                  color="#FFF"
-                />
-
-              </View>
-
-            )
-          }
-
-          <TouchableOpacity
-            style={styles.cameraButton}
-            onPress={escolherImagem}
-          >
-
-            <Ionicons
-              name="camera"
-              size={16}
-              color="#FFF"
-            />
-
+          <TouchableOpacity style={styles.cameraButton} onPress={escolherImagem}>
+            <Ionicons name="camera" size={16} color="#FFF" />
           </TouchableOpacity>
 
-          {
+          {editando ? (
+            <TextInput
+              value={nome}
+              onChangeText={setNome}
+              style={styles.input}
+              placeholder="Digite seu nome"
+            />
+          ) : (
+            <Text style={styles.name}>{nome || 'Usuário'}</Text>
+          )}
 
-            editando ? (
+          <Text style={styles.email}>{user?.email}</Text>
 
-              <TextInput
-                value={nome}
-                onChangeText={setNome}
-                style={styles.input}
-                placeholder="Digite seu nome"
-              />
-
-            ) : (
-
-              <Text style={styles.name}>
-                {nome || 'Usuário'}
-              </Text>
-
-            )
-          }
-
-          <Text style={styles.email}>
-            {user?.email}
-          </Text>
-
-          <View
-            style={styles.statsContainer}
-          >
-
+          <View style={styles.statsContainer}>
             <View style={styles.statBox}>
-
-              <Text
-                style={styles.statNumber}
-              >
-                {favoritos.length}
-              </Text>
-
-              <Text
-                style={styles.statLabel}
-              >
-                Favoritos
-              </Text>
-
+              <Text style={styles.statNumber}>{totalFavoritos}</Text>
+              <Text style={styles.statLabel}>Favoritos</Text>
             </View>
-
             <View style={styles.statBox}>
-
-              <Text
-                style={styles.statNumber}
-              >
-                {favoritos.length}
-              </Text>
-
-              <Text
-                style={styles.statLabel}
-              >
-                Países vistos
-              </Text>
-
+              <Text style={styles.statNumber}>{totalFavoritos}</Text>
+              <Text style={styles.statLabel}>Países vistos</Text>
             </View>
-
           </View>
 
-          {
+          {editando ? (
+            <TouchableOpacity style={styles.option} onPress={salvarNome}>
+              <Ionicons name="checkmark-circle-outline" size={20} color="#555" />
+              <Text style={styles.optionText}>Salvar Nome</Text>
+            </TouchableOpacity>
+          ) : (
+            <TouchableOpacity style={styles.option} onPress={() => setEditando(true)}>
+              <Ionicons name="person-outline" size={20} color="#555" />
+              <Text style={styles.optionText}>Editar Perfil</Text>
+            </TouchableOpacity>
+          )}
 
-            editando ? (
-
-              <TouchableOpacity
-                style={styles.option}
-                onPress={salvarNome}
-              >
-
-                <Ionicons
-                  name="checkmark-circle-outline"
-                  size={20}
-                  color="#555"
-                />
-
-                <Text
-                  style={styles.optionText}
-                >
-                  Salvar Nome
-                </Text>
-
-              </TouchableOpacity>
-
-            ) : (
-
-              <TouchableOpacity
-                style={styles.option}
-                onPress={() =>
-                  setEditando(true)
-                }
-              >
-
-                <Ionicons
-                  name="person-outline"
-                  size={20}
-                  color="#555"
-                />
-
-                <Text
-                  style={styles.optionText}
-                >
-                  Editar Perfil
-                </Text>
-
-              </TouchableOpacity>
-
-            )
-          }
-
-          <TouchableOpacity
-            style={styles.option}
-            onPress={escolherImagem}
-          >
-
-            <Ionicons
-              name="image-outline"
-              size={20}
-              color="#555"
-            />
-
-            <Text style={styles.optionText}>
-              Alterar Foto
-            </Text>
-
+          <TouchableOpacity style={styles.option} onPress={escolherImagem}>
+            <Ionicons name="image-outline" size={20} color="#555" />
+            <Text style={styles.optionText}>Alterar Foto</Text>
           </TouchableOpacity>
 
-          {
-
-            editandoSenha ? (
-
-              <>
-
-                <View
-                  style={styles.inputContainer}
-                >
-
+          {editandoSenha ? (
+            <>
+              <View style={styles.inputContainer}>
+                <Ionicons name="lock-closed-outline" size={20} color="#777" />
+                <TextInput
+                  placeholder="Nova senha"
+                  secureTextEntry={!mostrarSenha}
+                  style={styles.inputSenha}
+                  value={novaSenha}
+                  onChangeText={setNovaSenha}
+                />
+                <TouchableOpacity onPress={() => setMostrarSenha(!mostrarSenha)}>
                   <Ionicons
-                    name="lock-closed-outline"
+                    name={mostrarSenha ? 'eye-outline' : 'eye-off-outline'}
                     size={20}
                     color="#777"
                   />
-
-                  <TextInput
-                    placeholder="Nova senha"
-                    secureTextEntry={
-                      !mostrarSenha
-                    }
-                    style={styles.inputSenha}
-                    value={novaSenha}
-                    onChangeText={
-                      setNovaSenha
-                    }
-                  />
-
-                  <TouchableOpacity
-                    onPress={() =>
-                      setMostrarSenha(
-                        !mostrarSenha
-                      )
-                    }
-                  >
-
-                    <Ionicons
-                      name={
-                        mostrarSenha
-                          ? 'eye-outline'
-                          : 'eye-off-outline'
-                      }
-                      size={20}
-                      color="#777"
-                    />
-
-                  </TouchableOpacity>
-
-                </View>
-
-                <TouchableOpacity
-                  style={styles.option}
-                  onPress={alterarSenha}
-                >
-
-                  <Ionicons
-                    name="checkmark-circle-outline"
-                    size={20}
-                    color="#555"
-                  />
-
-                  <Text
-                    style={styles.optionText}
-                  >
-                    Salvar Nova Senha
-                  </Text>
-
                 </TouchableOpacity>
-
-              </>
-
-            ) : (
-
-              <TouchableOpacity
-                style={styles.option}
-                onPress={() =>
-                  setEditandoSenha(true)
-                }
-              >
-
-                <Ionicons
-                  name="lock-closed-outline"
-                  size={20}
-                  color="#555"
-                />
-
-                <Text
-                  style={styles.optionText}
-                >
-                  Alterar Senha
-                </Text>
-
+              </View>
+              <TouchableOpacity style={styles.option} onPress={alterarSenha}>
+                <Ionicons name="checkmark-circle-outline" size={20} color="#555" />
+                <Text style={styles.optionText}>Salvar Nova Senha</Text>
               </TouchableOpacity>
+            </>
+          ) : (
+            <TouchableOpacity style={styles.option} onPress={() => setEditandoSenha(true)}>
+              <Ionicons name="lock-closed-outline" size={20} color="#555" />
+              <Text style={styles.optionText}>Alterar Senha</Text>
+            </TouchableOpacity>
+          )}
 
-            )
-          }
-
-          <TouchableOpacity
-            style={styles.logout}
-            onPress={sair}
-          >
-
-            <Ionicons
-              name="log-out-outline"
-              size={20}
-              color="#FF3B30"
-            />
-
-            <Text
-              style={styles.logoutText}
-            >
-              Sair
-            </Text>
-
+          <TouchableOpacity style={styles.logout} onPress={sair}>
+            <Ionicons name="log-out-outline" size={20} color="#FF3B30" />
+            <Text style={styles.logoutText}>Sair</Text>
           </TouchableOpacity>
 
         </View>
-
       </ScrollView>
 
       <View style={styles.bottomTab}>
-
-        <TouchableOpacity
-          style={styles.tabItem}
-          onPress={() =>
-            navigation.navigate('Home')
-          }
-        >
-
-          <Ionicons
-            name="home-outline"
-            size={22}
-            color="#999"
-          />
-
-          <Text style={styles.inactiveTab}>
-            Início
-          </Text>
-
+        <TouchableOpacity style={styles.tabItem} onPress={() => navigation.navigate('Home')}>
+          <Ionicons name="home-outline" size={22} color="#999" />
+          <Text style={styles.inactiveTab}>Início</Text>
         </TouchableOpacity>
-
-        <TouchableOpacity
-          style={styles.tabItem}
-          onPress={() =>
-            navigation.navigate(
-              'Favoritos'
-            )
-          }
-        >
-
-          <Ionicons
-            name="heart-outline"
-            size={22}
-            color="#999"
-          />
-
-          <Text style={styles.inactiveTab}>
-            Favoritos
-          </Text>
-
+        <TouchableOpacity style={styles.tabItem} onPress={() => navigation.navigate('Favoritos')}>
+          <Ionicons name="heart-outline" size={22} color="#999" />
+          <Text style={styles.inactiveTab}>Favoritos</Text>
         </TouchableOpacity>
-
-        <TouchableOpacity
-          style={styles.tabItem}
-        >
-
-          <Ionicons
-            name="person"
-            size={22}
-            color="#0057FF"
-          />
-
-          <Text style={styles.activeTab}>
-            Perfil
-          </Text>
-
+        <TouchableOpacity style={styles.tabItem}>
+          <Ionicons name="person" size={22} color="#0057FF" />
+          <Text style={styles.activeTab}>Perfil</Text>
         </TouchableOpacity>
-
       </View>
 
     </View>
@@ -538,7 +229,7 @@ export default function PerfilScreen({ navigation }) {
 
 const styles = StyleSheet.create({
 
-  container: {
+  wrapper: {
     flex: 1,
     backgroundColor: '#F4F7FF',
   },
@@ -555,15 +246,6 @@ const styles = StyleSheet.create({
     borderBottomRightRadius: 25,
   },
 
-  avatarPlaceholder: {
-    width: 110,
-    height: 110,
-    borderRadius: 55,
-    backgroundColor: '#0057FF',
-    justifyContent: 'center',
-    alignItems: 'center',
-  },
-
   headerTitle: {
     color: '#FFF',
     fontSize: 20,
@@ -576,13 +258,21 @@ const styles = StyleSheet.create({
     borderRadius: 25,
     padding: 20,
     alignItems: 'center',
-    marginBottom: 120,
   },
 
   avatar: {
     width: 110,
     height: 110,
     borderRadius: 55,
+  },
+
+  avatarPlaceholder: {
+    width: 110,
+    height: 110,
+    borderRadius: 55,
+    backgroundColor: '#0057FF',
+    justifyContent: 'center',
+    alignItems: 'center',
   },
 
   cameraButton: {
@@ -689,10 +379,6 @@ const styles = StyleSheet.create({
   },
 
   bottomTab: {
-    position: 'absolute',
-    bottom: 0,
-    left: 0,
-    right: 0,
     backgroundColor: '#FFF',
     flexDirection: 'row',
     justifyContent: 'space-around',
@@ -718,5 +404,4 @@ const styles = StyleSheet.create({
     fontSize: 12,
     marginTop: 4,
   },
-
 });
