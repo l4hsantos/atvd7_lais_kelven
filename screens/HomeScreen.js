@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from 'react';
-import {View,Text,StyleSheet,TextInput,TouchableOpacity,Image,ActivityIndicator,FlatList,} from 'react-native';
+import {View,Text,StyleSheet,TextInput,TouchableOpacity,Image, ActivityIndicator,ScrollView,} from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 
 export default function HomeScreen({ navigation }) {
@@ -74,31 +74,87 @@ export default function HomeScreen({ navigation }) {
   return (
     <View style={styles.wrapper}>
 
+      {/* HEADER */}
       <View style={styles.header}>
         <Ionicons name="menu" size={24} color="#FFF" />
         <Text style={styles.headerTitle}>Países</Text>
         <Ionicons name="notifications-outline" size={24} color="#FFF" />
       </View>
 
-      <FlatList
-        data={paisesFiltrados}
-        keyExtractor={(item) => item.cca2}
-        renderItem={renderItem}
-        showsVerticalScrollIndicator={false}
-        ListHeaderComponent={
-          <View style={styles.searchContainer}>
-            <Ionicons name="search-outline" size={20} color="#999" />
-            <TextInput
-              placeholder="Pesquisar país..."
-              style={styles.searchInput}
-              value={pesquisa}
-              onChangeText={setPesquisa}
-            />
-          </View>
-        }
-        contentContainerStyle={styles.listaConteudo}
-      />
+      <View style={styles.searchContainer}>
 
+        <Ionicons
+          name="search-outline"
+          size={20}
+          color="#999"
+        />
+
+        <TextInput
+          placeholder="Pesquisar país..."
+          style={styles.searchInput}
+          value={pesquisa}
+          onChangeText={setPesquisa}
+        />
+
+      </View>
+
+      <ScrollView
+        style={styles.scroll}
+        showsVerticalScrollIndicator={false}
+        contentContainerStyle={styles.scrollContent}
+      >
+
+        {
+          paisesFiltrados.map((item) => (
+
+            <TouchableOpacity
+              key={item.cca2}
+              style={styles.card}
+              activeOpacity={0.8}
+              onPress={() =>
+                navigation.navigate('Detalhe', {
+                  codigo: item.cca2,
+                })
+              }
+            >
+
+              <View style={styles.cardLeft}>
+
+                <Image
+                  source={{
+                    uri: `https://flagsapi.com/${item.cca2}/flat/64.png`,
+                  }}
+                  style={styles.flag}
+                />
+
+                <View>
+
+                  <Text style={styles.countryName}>
+                    {item.name.common}
+                  </Text>
+
+                  <Text style={styles.capital}>
+                    Capital: {item.capital?.[0] || 'N/A'}
+                  </Text>
+
+                </View>
+
+              </View>
+
+              <Ionicons
+                name="chevron-forward"
+                size={20}
+                color="#999"
+              />
+
+            </TouchableOpacity>
+
+          ))
+        }
+
+      </ScrollView>
+
+      {/* FOOTER */}
       <View style={styles.bottomTab}>
         <TouchableOpacity
           style={styles.tabItem}
@@ -182,10 +238,14 @@ const styles = StyleSheet.create({
     marginLeft: 10,
   },
 
-  listaConteudo: {
+  scroll: {
+    flex: 1,
+  },
+
+  scrollContent: {
     paddingHorizontal: 15,
-    paddingTop: 10,
-    paddingBottom: 20,
+    paddingTop: 15,
+    paddingBottom: 30,
   },
 
   card: {
@@ -223,11 +283,14 @@ const styles = StyleSheet.create({
   },
 
   bottomTab: {
+    position: 'absolute',
+    bottom: 0,
+    left: 0,
+    right: 0,
     backgroundColor: '#FFF',
     flexDirection: 'row',
     justifyContent: 'space-around',
     alignItems: 'center',
-    paddingVertical: 15,
     borderTopLeftRadius: 25,
     borderTopRightRadius: 25,
     elevation: 20,
